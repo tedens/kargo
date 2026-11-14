@@ -4,3 +4,10 @@
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: ~'@{sizeMD}px';
 }
+
+// The same grid inside a group, whose section already supplies the spacing
+// above it.
+.groupList {
+  .list();
+  margin-top: 0;
+}

@@ -14,12 +14,16 @@ export const ProjectItem = ({
   project,
   starred,
   onToggleStar,
-  onLabelClick
+  onLabelClick,
+  groupKey
 }: {
   project?: Project;
   starred: boolean;
   onToggleStar: (id: string) => void;
   onLabelClick?: (key: string, value: string) => void;
+  // The label key the page is grouped by, if any. The group's heading already
+  // says it, so the tile leaves that label out.
+  groupKey?: string;
 }) => {
   const stagesStats = project?.status?.stats?.stages;
   const warehousesStats = project?.status?.stats?.warehouses;
@@ -40,7 +44,11 @@ export const ProjectItem = ({
           <Typography.Paragraph type='secondary' className='!mb-0'>
             {project?.metadata?.annotations?.[DESCRIPTION_ANNOTATION_KEY]}
           </Typography.Paragraph>
-          <ProjectLabels labels={project?.metadata?.labels} onLabelClick={onLabelClick} />
+          <ProjectLabels
+            labels={project?.metadata?.labels}
+            omitKey={groupKey}
+            onLabelClick={onLabelClick}
+          />
         </div>
 
         <Button

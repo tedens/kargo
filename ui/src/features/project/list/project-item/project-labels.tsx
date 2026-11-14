@@ -21,7 +21,7 @@ const stopKeys = (e: KeyboardEvent) => {
   }
 };
 
-const LabelTag = ({
+export const LabelTag = ({
   label: [key, value],
   onClick
 }: {
@@ -29,7 +29,7 @@ const LabelTag = ({
   onClick?: (key: string, value: string) => void;
 }) => (
   <Tag
-    bordered={false}
+    variant='filled'
     title={`${key}: ${value}`}
     className='!m-0 min-w-0 max-w-full truncate'
     style={{ cursor: onClick ? 'pointer' : undefined }}
@@ -61,12 +61,16 @@ const LabelTag = ({
 // by it.
 export const ProjectLabels = ({
   labels,
+  omitKey,
   onLabelClick
 }: {
   labels?: Record<string, string>;
+  // A label key to leave out: the one the page is grouped by, whose tag would
+  // say the same thing on every tile of a group.
+  omitKey?: string;
   onLabelClick?: (key: string, value: string) => void;
 }) => {
-  const pairs = visibleLabels(labels);
+  const pairs = visibleLabels(labels).filter(([key]) => key !== omitKey);
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(pairs.length);
@@ -88,7 +92,7 @@ export const ProjectLabels = ({
     const observer = new ResizeObserver(recompute);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [labels]);
+  }, [labels, omitKey]);
 
   if (pairs.length === 0) {
     return null;
@@ -107,7 +111,7 @@ export const ProjectLabels = ({
         {pairs.map((pair) => (
           <LabelTag key={pair[0]} label={pair} />
         ))}
-        <Tag bordered={false} className='!m-0'>
+        <Tag variant='filled' className='!m-0'>
           +{pairs.length}
         </Tag>
       </div>
@@ -128,7 +132,7 @@ export const ProjectLabels = ({
             }
           >
             <Tag
-              bordered={false}
+              variant='filled'
               className='!m-0 shrink-0 cursor-pointer'
               tabIndex={0}
               aria-label={`Show all ${pairs.length} labels`}
