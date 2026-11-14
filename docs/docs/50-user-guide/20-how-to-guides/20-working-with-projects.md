@@ -771,6 +771,49 @@ CLI. This section explains how to handle `Project`s effectively through both int
 </TabItem>
 </Tabs>
 
+### Finding and Grouping Projects
+
+The UI's home page lists every `Project` you have access to. As the number of
+`Project`s grows, ordinary Kubernetes labels on the `Project` resources can be
+used to narrow and organize that list. No Kargo-specific configuration is
+needed -- label your `Project`s however makes sense for your organization:
+
+```yaml
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: checkout
+  labels:
+    team: payments
+    tier: frontend
+```
+
+* **Filter by labels:** Select one or more label values using
+  <Hlt>Filter by labels...</Hlt>. Multiple values of the same label are OR'd
+  and different labels are AND'd. The selection is kept in the page's URL (e.g.
+  `?label=team=payments`), so a filtered view can be bookmarked or shared.
+  Clicking a label on a `Project` adds it to the filter.
+
+* **Group by a label:** Select a label key under <Hlt>Group by</Hlt> to split
+  the list into one collapsible section per value of that label. `Project`s
+  without the label are collected in a final section of their own. Select the
+  same key again to stop grouping.
+
+* **Cards or list:** Switch between <Hlt>Cards</Hlt> and <Hlt>List</Hlt> to
+  view `Project`s as tiles or as a compact table with one row per `Project`.
+
+:::info
+
+Labels with prefixes belonging to Kubernetes, Kargo, Argo CD, or Helm (e.g.
+`app.kubernetes.io/managed-by`) describe how a `Project` was created rather
+than what it is. They are not displayed and are not offered for grouping.
+
+:::
+
+The filter is also available through the API's `labelSelector` query parameter
+on `GET /v1beta1/projects`, which accepts any
+[Kubernetes label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors).
+
 ### Deleting a Project
 
 <Tabs groupId="delete-project">
