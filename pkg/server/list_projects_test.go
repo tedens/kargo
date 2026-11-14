@@ -201,6 +201,64 @@ func Test_server_listProjects(t *testing.T) {
 				},
 			},
 			{
+				name: "labelSelector matches Projects lacking a label",
+				url:  "/v1beta1/projects?labelSelector=" + url.QueryEscape("!team"),
+				clientBuilder: fake.NewClientBuilder().WithObjects(
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "alpha",
+						Labels: map[string]string{"team": "infra"},
+					}},
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "beta",
+						Labels: map[string]string{"env": "dev"},
+					}},
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{Name: "gamma"}},
+				),
+				assertions: func(t *testing.T, w *httptest.ResponseRecorder, _ client.Client) {
+					require.Equal(t, http.StatusOK, w.Code)
+					resp := listProjectsResponse{}
+					err := json.Unmarshal(w.Body.Bytes(), &resp)
+					require.NoError(t, err)
+					require.Len(t, resp.Items, 2)
+					require.Equal(t, 2, resp.Total)
+					require.Equal(t, "beta", resp.Items[0].Name)
+					require.Equal(t, "gamma", resp.Items[1].Name)
+				},
+			},
+			{
+				name: "labelSelector composes with filter and pagination",
+				url: "/v1beta1/projects?filter=app&pageSize=1&page=1&labelSelector=" +
+					url.QueryEscape("team=infra"),
+				clientBuilder: fake.NewClientBuilder().WithObjects(
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "app-a",
+						Labels: map[string]string{"team": "infra"},
+					}},
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "app-b",
+						Labels: map[string]string{"team": "apps"},
+					}},
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "app-c",
+						Labels: map[string]string{"team": "infra"},
+					}},
+					&kargoapi.Project{ObjectMeta: metav1.ObjectMeta{
+						Name:   "tools",
+						Labels: map[string]string{"team": "infra"},
+					}},
+				),
+				assertions: func(t *testing.T, w *httptest.ResponseRecorder, _ client.Client) {
+					require.Equal(t, http.StatusOK, w.Code)
+					resp := listProjectsResponse{}
+					err := json.Unmarshal(w.Body.Bytes(), &resp)
+					require.NoError(t, err)
+					// Total counts every match, not just the page returned.
+					require.Equal(t, 2, resp.Total)
+					require.Len(t, resp.Items, 1)
+					require.Equal(t, "app-c", resp.Items[0].Name)
+				},
+			},
+			{
 				name: "pageSize and page paginate after filtering",
 				url:  "/v1beta1/projects?pageSize=2&page=1",
 				clientBuilder: fake.NewClientBuilder().WithObjects(
